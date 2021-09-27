@@ -1,0 +1,245 @@
+import telebot
+import yfinance as yf
+from telebot import types
+#from pyrogram.errors import FloodWait
+import random
+import datetime
+from datetime import timedelta
+
+stocks = ['nok', 'amd', 'trip', 'sig']  
+aboutmylittledreamname = []
+aboutmylittledreammoney = []
+aboutmylittledreammymoney = []
+money = {}
+cars = []
+carnumbers = []
+caryear = []
+taskjob = []
+time = []
+
+
+
+
+bot = telebot.TeleBot("2002403796:AAFY72_4IscNycMvjUN5AtX2ZkAn5KGbAnQ", parse_mode=None) 
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+
+    
+    bot.send_message(message.chat.id, "Привет, я твой помощник!\nЧто именно ты хочешь сдеать?\nЕсли не помнишь команд, то напиши /help")
+    
+
+    
+@bot.message_handler(commands=['help'])
+def Help (message):
+    bot.send_message(message.chat.id, "Я умею:\nЗаписывать твои дела /daytask\nТвое расписание /timetable\nДобавить новую машину к себе в гараж /carnumber\nТвой гараж /Garage\nУзнать цену твоих любимых акций /stocks\nДобавить акции /addstocks\nКопилка на мечту /mylittledream\nДобавить деньги в копилку /addmoney\nПоказать информацию о копилках /output")
+
+
+@bot.message_handler(commands=['daytask'])
+def daytask(message):
+    day = bot.send_message(message.chat.id, "Напиши дело, которое хочешь добавить в расписание и дату в формате day/month/year")
+    bot.register_next_step_handler(day, daytask_1)
+ 
+def daytask_1(message):
+    global answers
+    daytask_answer = message.text
+    dayt = daytask_answer.split()
+    #if dayt[1] == '' or dayt[0] == ''
+    try:
+        dayt[1] != '' 
+        dayt[0] != ''
+
+    except Exception:
+        bot.send_message(message.chat.id, f"Что-то пошло не так")
+    else:
+        date = dayt[1].split('/')
+        date1 = datetime.date(int(date[2]), int(date[1]), int(date[0]))
+        job = dayt[0]
+        time.append(date1)
+        taskjob.append(job)
+        bot.send_message(message.chat.id, f" На {date1} добавлено дело: {job}")
+    
+        
+@bot.message_handler(commands=['timetable'])    
+def timetable(message):
+    all = ""
+    if len(time) == 0 or len(taskjob) == 0:
+        bot.send_message(message.chat.id, f"Я дико извиняюсь, но туть пусто")
+    else:
+        for i in range(len(taskjob)): 
+            all += f"На {time[i]} у тебя запланированно {taskjob[i]}\n"
+        bot.send_message(message.chat.id, f"Твое расписание:\n{all}")
+        
+        
+        
+            
+@bot.message_handler(commands=['carnumber'])
+def carnumber(message):
+    car = bot.send_message(message.chat.id, "Введи название машины, год и номер через пробел:")
+    bot.register_next_step_handler(car, icars)
+    
+    
+def icars(message):
+    global answers
+    icars_answer = message.text
+    icarsans = icars_answer.split()
+    try:
+        icarsans[2] != '' 
+        icarsans[1] != ''
+        icarsans[0] != ''
+        0 <= int(icarsans[1]) <= 3000
+
+    except Exception:
+        bot.send_message(message.chat.id, f"Что-то пошло не так")
+    else:
+    
+        cars.append(icarsans[0])
+        caryear.append(icarsans[1])
+        carnumbers.append(icarsans[2])  
+        bot.send_message(message.chat.id, f"Поздравляю! В твой гараж добавлен автомобиль:\n{icarsans[0]}, {icarsans[1]} года с гос.номером {icarsans[2]}") 
+
+@bot.message_handler(commands=['Garage'])
+def Garage(message):
+    allcars = ""
+    if len(cars) == 0 or len(caryear) == 0 or len(carnumbers) == 0:
+        bot.send_message(message.chat.id, f"Михалыч передает, что у тебя пусто в гараже =(")
+    else:
+        for i in range(len(cars)): 
+            allcars += f"{i+1}){cars[i]} {caryear[i]} года с гос.номером {carnumbers[i]}\n"
+        bot.send_message(message.chat.id, f"В твоем гараже есть:\n{allcars}")
+        
+
+
+    
+@bot.message_handler(commands=['addstocks'])
+def addstocks(message):
+    send = bot.send_message(message.chat.id, 'Введи тикер акции')
+    bot.register_next_step_handler(send, addstocks1)
+def addstocks1(message):
+    bot.send_message(message.chat.id, 'Обрабатываю запрос...')
+    global answers
+    addstocks2 = []
+    first_answer = message.text
+    addstocks2.append(first_answer) 
+    asd = yf.Ticker(first_answer)
+    hist = asd.isin
+    aa = len(first_answer)
+    if 1 <= int(aa) <= 4:
+        if hist != '-':
+            try:
+                first_answer != 0
+
+            except Exception:
+                bot.send_message(message.chat.id, f"Наши финансисты проверили твой запрос, ты где-то ошибся")
+            else:  
+                    stocks.append(first_answer) 
+                    bot.send_message(message.chat.id, f"Поздравляю!\nВ списке твоих акций теперь есть:{first_answer}") 
+        else: 
+            bot.send_message(message.chat.id, f"Наши финансисты проверили твой запрос, ты ввел неверный тикер")
+    else: 
+        bot.send_message(message.chat.id, f"Наши финансисты проверили твой запрос, ты где-то ошибся")
+
+
+
+
+
+@bot.message_handler(commands=['mylittledream'])
+def mylittledream(message):
+    dream = bot.send_message(message.chat.id, 'Введи название того, на что ты будешь копить и его цену в рублях через пробел:')
+    bot.register_next_step_handler(dream, mylittledream1)
+
+
+def mylittledream1(message):
+    global answers
+    dream_answer = message.text
+    stanswer = dream_answer.split()
+    try:
+        stanswer[0] != '' 
+        int(stanswer[1]) > 0 
+
+    except Exception:
+        bot.send_message(message.chat.id, f"Перепроверь введенные данные")
+    else:
+    
+        aboutmylittledreamname.append(stanswer[0])
+        aboutmylittledreammoney.append(stanswer[1])
+        aboutmylittledreammymoney.append('0') 
+        bot.send_message(message.chat.id, f"Отлично! Теперь у тебя в копилке есть {stanswer[0]}") 
+
+    
+@bot.message_handler(commands=['addmoney'])
+def addmoney(message):
+    addmoney1 = bot.send_message(message.chat.id, 'Введите название предмета и сколько ты добавляешь в эту копилку, через пробел')
+    bot.register_next_step_handler(addmoney1, mylittledream2)    
+def mylittledream2(message):
+
+    global answers
+    dream_answer1 = message.text
+    sstsanswer = dream_answer1.split()
+    for i in aboutmylittledreamname:
+        if sstsanswer[0] == i:
+            try:
+                sstsanswer[0] != '' 
+                int(sstsanswer[1]) > 0 
+        
+            except Exception:
+                bot.send_message(message.chat.id, f"Ты ввел что-то не так, будь внимательние =)")
+            else:
+                
+                g = sstsanswer[0]
+                l = int(sstsanswer[1])
+                for i in range(len(aboutmylittledreammymoney)):
+                    money[aboutmylittledreamname[i]] = aboutmylittledreammymoney[i]
+                money[g] = l + int(money[g]) 
+                for i in range(len(aboutmylittledreammymoney)):
+                    if aboutmylittledreamname[i] == g:
+                        aboutmylittledreammymoney[i]  = money[g]
+                bot.send_message(message.chat.id, f"Ты пополнил копилку: {g} на {l} rub")
+        else:
+            bot.send_message(message.chat.id, f"Копилки с названием {sstsanswer[0]} нет")
+   
+@bot.message_handler(commands=['output'])
+def output(message):
+    for i in range(len(aboutmylittledreamname)):       
+        if int(aboutmylittledreammoney[i]) <= int(aboutmylittledreammymoney[i]):
+            bot.send_message(message.chat.id,f"Поздравляю! Ты накопил на свою мечту - {aboutmylittledreamname[i]}!\nБеги и покупай ее!")
+        else:
+            bot.send_message(message.chat.id, f"Ты копишь на:\n{aboutmylittledreamname[i]} стоимостью в {aboutmylittledreammoney[i]} rub\nТы накопил: {aboutmylittledreammymoney[i]}")
+        
+        
+        
+            
+@bot.message_handler(commands=['stocks'])
+def get_stocks(message):
+    responce = ""
+    stock_data = []
+    for stock in stocks:
+        data = yf.download(tickers=stock, period = '2d', interval='1d')
+        data = data.reset_index()
+        responce += f"-----{stock}-----\n"
+        stock_data.append([stock])
+        columns = ['stock']
+        for index, row in data.iterrows():
+            stock_position = len(stock_data) - 1
+            price = round(row['Close'], 2)
+            format_date = row['Date'].strftime('%m/%d')
+            responce += f" {format_date}: {price}/n"
+            stock_data[stock_position].append(price)
+            columns.append(format_date)
+        print()
+        
+    responce = f"\n{columns[0] : <10}{columns[1] : ^10}{columns[2] : >10}\n"
+    for row in stock_data:
+        responce += f"\n{row[0] : <10}{row[1] : ^10}{row[2]: >10}\n"
+    responce += "\n Stock Data"
+    print(responce)
+
+    bot.send_message(message.chat.id, f"Курс твоих акций:{responce}")
+
+
+    
+    
+    
+    
+
+
+bot.polling( none_stop = True )
